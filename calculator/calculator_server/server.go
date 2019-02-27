@@ -11,16 +11,36 @@ import (
 
 type server struct{}
 
-func (*server) Sum(ctx context.Context, req *calculatorpb.CalculatorRequest) (*calculatorpb.CalculatorResponse, error) {
+func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
 	fmt.Printf("Received Calculator RPC: %v\n", req)
 
 	sum := req.GetNumOne() + req.GetNumTwo()
 
-	res := &calculatorpb.CalculatorResponse{
+	res := &calculatorpb.SumResponse{
 		Result: sum,
 	}
 
 	return res, nil
+}
+
+func (*server) PrimeDecomposition(req *calculatorpb.PrimeDecompositionRequest, stream calculatorpb.CalculatorService_PrimeDecompositionServer) error {
+	fmt.Printf("PrimeDecomposition function was invoked with %v\n", req)
+
+	number := req.GetNum()
+	divisor := int64(2)
+
+	for number > 1 {
+		if number % divisor == 0 {
+			stream.Send(&calculatorpb.PrimeDecompositionResponse{
+				PrimeFactor: divisor,
+			})
+			number = number/divisor
+		} else {
+			divisor++
+			fmt.Printf("Divisor has increased to %v\n", divisor)
+		}
+	}
+	return nil
 }
 
 func main() {
