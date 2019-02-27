@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/gsafcik/grpc-go-course/calculator/calculatorpb"
-	"google.golang.org/grpc"
+	"io"
 	"log"
 	"net"
+
+	"github.com/gsafcik/grpc-go-course/calculator/calculatorpb"
+	"google.golang.org/grpc"
 )
 
 type server struct{}
@@ -30,17 +32,41 @@ func (*server) PrimeDecomposition(req *calculatorpb.PrimeDecompositionRequest, s
 	divisor := int64(2)
 
 	for number > 1 {
-		if number % divisor == 0 {
+		if number%divisor == 0 {
 			stream.Send(&calculatorpb.PrimeDecompositionResponse{
 				PrimeFactor: divisor,
 			})
-			number = number/divisor
+			number = number / divisor
 		} else {
 			divisor++
 			fmt.Printf("Divisor has increased to %v\n", divisor)
 		}
 	}
 	return nil
+}
+
+func (*server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
+	fmt.Printf("ComputeAverage function was invoked with a streaming request\n")
+
+	total := int32(0)
+	count := 0
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			// we have finished reading the client stream
+			result := float64(total) / float64(count)
+			return stream.SendAndClose(&calculatorpb.ComputeAverageResponse{
+				Average: result,
+			})
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v\n", err)
+		}
+
+		total += req.GetNumber()
+		count++
+	}
 }
 
 func main() {
