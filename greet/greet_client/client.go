@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
+	"time"
+
 	"github.com/gsafcik/grpc-go-course/greet/greetpb"
 	"google.golang.org/grpc"
-	"log"
-	"io"
-	"time"
 )
 
 func main() {
@@ -44,7 +45,7 @@ func doUnary(c greetpb.GreetServiceClient) {
 
 func doServerStreaming(c greetpb.GreetServiceClient) {
 	fmt.Println("Starting to do a Server Streaming RPC...")
-	
+
 	req := &greetpb.GreetManyTimesRequest{
 		Greeting: &greetpb.Greeting{
 			FirstName: "Geoff",

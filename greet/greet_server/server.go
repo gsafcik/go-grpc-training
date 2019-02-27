@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/gsafcik/grpc-go-course/greet/greetpb"
-	"google.golang.org/grpc"
+	"io"
 	"log"
 	"net"
 	"strconv"
 	"time"
-	"io"
+
+	"github.com/gsafcik/grpc-go-course/greet/greetpb"
+	"google.golang.org/grpc"
 )
 
 type server struct{}
@@ -35,7 +36,7 @@ func (*server) GreetManyTimes(req *greetpb.GreetManyTimesRequest, stream greetpb
 			Result: result,
 		}
 		stream.Send(res)
-		time.Sleep(1000 * time.Millisecond)  // add a little lag to show streaming
+		time.Sleep(1000 * time.Millisecond) // add a little lag to show streaming
 	}
 	return nil
 }
