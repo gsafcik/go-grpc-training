@@ -74,12 +74,6 @@ func doServerStreaming(c greetpb.GreetServiceClient) {
 func doClientStreaming(c greetpb.GreetServiceClient) {
 	fmt.Println("Starting to do a Client Streaming RPC...")
 
-	// req := &greetpb.LongGreetRequest{
-	// 	Greeting: &greetpb.Greeting{
-	// 		FirstName: "Geoff",
-	// 		LastName:  "Safcik",
-	// 	},
-	// }
 	request := []*greetpb.LongGreetRequest{
 		&greetpb.LongGreetRequest{
 			Greeting: &greetpb.Greeting{
