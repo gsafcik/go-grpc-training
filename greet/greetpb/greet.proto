@@ -24,14 +24,21 @@ message GreetManyTimesResponse {
     string result = 1;
 }
 
-message LongGreetRequest{
+message LongGreetRequest {
     Greeting greeting = 1;
 }
 
-message LongGreetResponse{
+message LongGreetResponse {
     string result = 1;
 }
 
+message GreetEveryoneRequest {
+    Greeting greeting = 1;
+}
+
+message GreetEveryoneResponse {
+    string result = 1;
+}
 
 service GreetService {
     // Unary
@@ -42,4 +49,7 @@ service GreetService {
 
     // Client Sreaming
     rpc LongGreet(stream LongGreetRequest) returns (LongGreetResponse) {};
+    
+    // Bi-Directional (BiDi) Sreaming
+    rpc GreetEveryone(stream GreetEveryoneRequest) returns (stream GreetEveryoneResponse) {};
 }
