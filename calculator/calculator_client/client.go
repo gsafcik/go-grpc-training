@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"time"
 
 	"github.com/gsafcik/grpc-go-course/calculator/calculatorpb"
 	"google.golang.org/grpc"
@@ -23,7 +24,8 @@ func main() {
 
 	// doUnary(c)
 	// doServerStreaming(c)
-	doClientStreaming(c)
+	// doClientStreaming(c)
+	doBiDiStreaming(c)
 }
 
 func doUnary(c calculatorpb.CalculatorServiceClient) {
@@ -68,20 +70,6 @@ func doServerStreaming(c calculatorpb.CalculatorServiceClient) {
 
 func doClientStreaming(c calculatorpb.CalculatorServiceClient) {
 	fmt.Println("Starting to do a ComputeAverage Server Streaming RPC...")
-	// request := []*calculatorpb.ComputeAverageRequest{
-	// 	&calculatorpb.ComputeAverageRequest{
-	// 		Number: 1,
-	// 	},
-	// 	&calculatorpb.ComputeAverageRequest{
-	// 		Number: 2,
-	// 	},
-	// 	&calculatorpb.ComputeAverageRequest{
-	// 		Number: 3,
-	// 	},
-	// 	&calculatorpb.ComputeAverageRequest{
-	// 		Number: 4,
-	// 	},
-	// }
 
 	stream, err := c.ComputeAverage(context.Background())
 	if err != nil {
@@ -100,4 +88,52 @@ func doClientStreaming(c calculatorpb.CalculatorServiceClient) {
 		log.Fatalf("error while receiving response from ComputeAverage: %v\n", err)
 	}
 	fmt.Printf("Average is: %v\n", res.GetAverage())
+}
+
+func doBiDiStreaming(c calculatorpb.CalculatorServiceClient) {
+	fmt.Println("Starting to do a FindMaximum Server Streaming RPC...")
+
+	// create a stream by invoking the client
+	stream, err := c.FindMaximum(context.Background())
+	if err != nil {
+		log.Fatalf("error while creating stream: %v\n", err)
+		return
+	}
+
+	numbers := []int32{1, 5, 3, 6, 2, 20}
+
+	waitc := make(chan struct{})
+	// send a bunch of messages to the client (go routine)
+	go func() {
+		// function to send a bunch of messages
+		for _, number := range numbers {
+			fmt.Printf("Sending number: %v\n", number)
+			stream.Send(&calculatorpb.FindMaximumRequest{
+				Number: number,
+			})
+			time.Sleep(1000 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}()
+
+	// receive a bunch of messages from the client (go routine)
+	go func() {
+		// function to receive a bunch of messages
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("error while receiving: %v\n", err)
+				break
+			}
+
+			fmt.Printf("Received new maximum of...: %v\n", res.GetCurrentMax())
+		}
+		close(waitc)
+	}()
+
+	// block until everything is done
+	<-waitc
 }
